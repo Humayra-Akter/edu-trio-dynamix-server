@@ -2,13 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
+require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://edu-trio-dynamix:or823NyCI0yHUNXg@cluster0.q18ojdg.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.q18ojdg.mongodb.net/edu-trio-dynamix?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -60,7 +60,7 @@ async function run() {
         res.status(500).json({ message: "Failed to add user" });
       }
     });
-    
+
     //user get
     app.get("/user", async (req, res) => {
       const query = {};
