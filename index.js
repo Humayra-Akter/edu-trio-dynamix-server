@@ -29,6 +29,20 @@ const client = new MongoClient(uri, {
   },
 });
 
+// Import socket.io
+// const http = require("http").createServer(app);
+// const io = require("socket.io")(http);
+
+// // Socket.io connection handling
+// io.on("connection", (socket) => {
+//   console.log("User Online");
+
+//   // Handle canvas-data event
+//   socket.on("canvas-data", (data) => {
+//     socket.broadcast.emit("canvas-data", data);
+//   });
+// });
+
 async function run() {
   try {
     await client.connect();
@@ -48,6 +62,7 @@ async function run() {
     const resourceCollection = client
       .db("edu-trio-dynamix")
       .collection("resource");
+    const courseCollection = client.db("edu-trio-dynamix").collection("course");
 
     // teacher post
     app.post("/teacher", async (req, res) => {
@@ -177,6 +192,35 @@ async function run() {
         const cursor = resourceCollection.find(query);
         const resources = await cursor.toArray();
         res.send(resources);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    ///teachers course get
+    app.post("/teacher/course", async (req, res) => {
+      try {
+        const courseData = req.body;
+        const result = await courseCollection.insertOne(courseData);
+        if (result.insertedCount === 1) {
+          res.status(201).json({ message: "course added successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to add course" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    // GET endpoint to retrieve all teacher resources
+    app.get("/teacher/course", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = courseCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
       } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
