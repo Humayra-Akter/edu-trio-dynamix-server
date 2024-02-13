@@ -11,7 +11,7 @@ app.use(express.json());
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    return cb(null, "./public/Images");
+    return cb(null, "./3-2/GES/Taslima%mam");
   },
   filename: function (req, file, cb) {
     return cb(null, `${Date.now()}_${file.originalname}`);
@@ -63,6 +63,10 @@ async function run() {
       .db("edu-trio-dynamix")
       .collection("resource");
     const courseCollection = client.db("edu-trio-dynamix").collection("course");
+    const applicationCollection = client
+      .db("edu-trio-dynamix")
+      .collection("application");
+    const pdfCollection = client.db("edu-trio-dynamix").collection("pdf");
 
     // teacher post
     app.post("/teacher", async (req, res) => {
@@ -73,6 +77,14 @@ async function run() {
       } else {
         res.status(500).json({ message: "Failed to add teacher" });
       }
+    });
+
+    //teacher get
+    app.get("/teacher", async (req, res) => {
+      const query = {};
+      const cursor = teacherCollection.find(query);
+      const teacher = await cursor.toArray();
+      res.send(teacher);
     });
 
     // student post
@@ -86,6 +98,14 @@ async function run() {
       }
     });
 
+    //student get
+    app.get("/student", async (req, res) => {
+      const query = {};
+      const cursor = studentCollection.find(query);
+      const student = await cursor.toArray();
+      res.send(student);
+    });
+
     // user post
     app.post("/user", async (req, res) => {
       const user = req.body;
@@ -97,22 +117,6 @@ async function run() {
       }
     });
 
-    //student get
-    app.get("/student", async (req, res) => {
-      const query = {};
-      const cursor = studentCollection.find(query);
-      const student = await cursor.toArray();
-      res.send(student);
-    });
-
-    //teacher get
-    app.get("/teacher", async (req, res) => {
-      const query = {};
-      const cursor = teacherCollection.find(query);
-      const teacher = await cursor.toArray();
-      res.send(teacher);
-    });
-
     //user get
     app.get("/user", async (req, res) => {
       const query = {};
@@ -121,7 +125,11 @@ async function run() {
       res.send(users);
     });
 
-    // Create a new project for a teacher
+    // teacher
+
+    
+
+    // Create project for teacher
     app.post("/teacher/project", async (req, res) => {
       try {
         const projectData = req.body;
@@ -136,7 +144,16 @@ async function run() {
         res.status(500).json({ message: "Internal server error" });
       }
     });
-    // Create a new project for a teacher
+
+    ///teachers project get
+    app.get("/teacher/project", async (req, res) => {
+      const query = {};
+      const cursor = projectCollection.find(query);
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
+    // Create assignment for teacher
     app.post("/teacher/assignment", async (req, res) => {
       try {
         const projectData = req.body;
@@ -160,15 +177,7 @@ async function run() {
       res.send(users);
     });
 
-    ///teachers assignment get
-    app.get("/teacher/project", async (req, res) => {
-      const query = {};
-      const cursor = projectCollection.find(query);
-      const users = await cursor.toArray();
-      res.send(users);
-    });
-
-    // POST endpoint to add a new teacher resource
+    //  Create resource for teacher
     app.post("/teacher/resource", async (req, res) => {
       try {
         const { title, url, teacherName, teacherEmail } = req.body;
@@ -185,7 +194,7 @@ async function run() {
       }
     });
 
-    // GET endpoint to retrieve all teacher resources
+    // teachers resource get
     app.get("/teacher/resource", async (req, res) => {
       try {
         const query = {};
@@ -198,7 +207,7 @@ async function run() {
       }
     });
 
-    ///teachers course get
+    //  Create course for teacher
     app.post("/teacher/course", async (req, res) => {
       try {
         const courseData = req.body;
@@ -214,11 +223,41 @@ async function run() {
       }
     });
 
-    // GET endpoint to retrieve all teacher resources
+    ///teachers course get
     app.get("/teacher/course", async (req, res) => {
       try {
         const query = {};
         const cursor = courseCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    //student
+    // Student applies for a course
+    app.post("/student/course", async (req, res) => {
+      try {
+        const projectData = req.body;
+        const result = await applicationCollection.insertOne(projectData);
+        if (result.insertedCount === 1) {
+          res.status(201).json({ message: "Project added successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to add project" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    ///Student course get
+    app.get("/student/course", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = applicationCollection.find(query);
         const course = await cursor.toArray();
         res.send(course);
       } catch (error) {
