@@ -69,6 +69,9 @@ async function run() {
     const studentApplyProjectCollection = client
       .db("edu-trio-dynamix")
       .collection("appliedProject");
+    const studentApplyAssignmentCollection = client
+      .db("edu-trio-dynamix")
+      .collection("appliedAssignment");
 
     // teacher post
     app.post("/teacher", async (req, res) => {
@@ -180,8 +183,16 @@ async function run() {
     //  Create resource for teacher
     app.post("/teacher/resource", async (req, res) => {
       try {
-        const { title, url, teacherName, teacherEmail } = req.body;
-        const resource = { title, url, teacherName, teacherEmail };
+        const { title, url, grade, subject, teacherName, teacherEmail } =
+          req.body;
+        const resource = {
+          title,
+          grade,
+          subject,
+          url,
+          teacherName,
+          teacherEmail,
+        };
         const result = await resourceCollection.insertOne(resource);
         if (result.insertedCount === 1) {
           res.status(201).json({ message: "Resource added successfully" });
@@ -264,13 +275,15 @@ async function run() {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
       }
-    }); 
-    
+    });
+
     // Student applies for a project
     app.post("/student/project", async (req, res) => {
       try {
         const projectData = req.body;
-        const result = await studentApplyProjectCollection.insertOne(projectData);
+        const result = await studentApplyProjectCollection.insertOne(
+          projectData
+        );
         if (result.insertedCount === 1) {
           res.status(201).json({ message: "Project added successfully" });
         } else {
@@ -289,6 +302,55 @@ async function run() {
         const cursor = studentApplyProjectCollection.find(query);
         const course = await cursor.toArray();
         res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    // Student applies for a project
+    app.post("/student/assignment", async (req, res) => {
+      try {
+        const projectData = req.body;
+        const result = await studentApplyAssignmentCollection.insertOne(
+          projectData
+        );
+        if (result.insertedCount === 1) {
+          res.status(201).json({ message: "Project added successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to add project" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    ///Student project get
+    app.get("/student/assignment", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = studentApplyAssignmentCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    // Get a specific student project by ID
+    app.get("/student/project/:id", async (req, res) => {
+      try {
+        const projectId = req.params.id;
+        // Convert ID to ObjectId
+        const objectId = new ObjectId(projectId);
+        const query = { _id: objectId };
+        const project = await studentApplyProjectCollection.findOne(query);
+        if (!project) {
+          return res.status(404).json({ message: "Project not found" });
+        }
+        res.json(project);
       } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
