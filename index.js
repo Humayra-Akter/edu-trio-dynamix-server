@@ -264,6 +264,9 @@ async function run() {
 
         const pdfStream = req.file.buffer;
 
+        // Extract project ID from request body
+        const projectId = req.body.projectId;
+
         // Uploading PDF file to Cloudinary
         cloudinary.uploader
           .upload_stream({ resource_type: "raw" }, async (error, result) => {
@@ -271,6 +274,7 @@ async function run() {
               return res.status(500).send("Upload to Cloudinary failed");
             }
             const uploadedFileData = {
+              projectId: projectId, // Store project ID
               cloudinaryUrl: result.url,
               originalFileName: req.file.originalname,
             };
