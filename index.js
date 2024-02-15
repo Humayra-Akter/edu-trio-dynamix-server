@@ -4,21 +4,20 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 require("dotenv").config();
 const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    return cb(null, "./3-2/GES/Taslima%mam");
-  },
-  filename: function (req, file, cb) {
-    return cb(null, `${Date.now()}_${file.originalname}`);
-  },
+cloudinary.config({
+  cloud_name: "dy2xb83i6",
+  api_key: "571638535488845",
+  api_secret: "tyZ6EfRldlDRYMp3GxZVgMvrGXI",
 });
 
-const upload = multer({ storage });
+// Multer middleware configuration
+const upload = multer({ storage: multer.memoryStorage() }).single("pdfFile");
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.q18ojdg.mongodb.net/edu-trio-dynamix?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -42,6 +41,8 @@ const client = new MongoClient(uri, {
 //     socket.broadcast.emit("canvas-data", data);
 //   });
 // });
+
+// Multer middleware configuration
 
 async function run() {
   try {
@@ -72,6 +73,7 @@ async function run() {
     const studentApplyAssignmentCollection = client
       .db("edu-trio-dynamix")
       .collection("appliedAssignment");
+    const pdfCollection = client.db("edu-trio-dynamix").collection("pdf");
 
     // teacher post
     app.post("/teacher", async (req, res) => {
@@ -248,6 +250,68 @@ async function run() {
     });
 
     //student
+
+    // Endpoint to receive uploaded PDF file
+    app.post("/uploadFile", async (req, res) => {
+      upload(req, res, async (err) => {
+        if (err) {
+          return res.status(500).send(err.message);
+        }
+
+        if (!req.file) {
+          return res.status(400).send("No file uploaded.");
+        }
+
+        const pdfStream = req.file.buffer;
+
+        // Uploading PDF file to Cloudinary
+        cloudinary.uploader
+          .upload_stream({ resource_type: "raw" }, async (error, result) => {
+            if (error) {
+              return res.status(500).send("Upload to Cloudinary failed");
+            }
+            const uploadedFileData = {
+              cloudinaryUrl: result.url,
+              originalFileName: req.file.originalname,
+            };
+
+            try {
+              const insertedFile = await pdfCollection.insertOne(
+                uploadedFileData
+              );
+              if (insertedFile.insertedCount === 1) {
+                return res
+                  .status(200)
+                  .send("PDF file uploaded and metadata stored successfully.");
+              } else {
+                return res
+                  .status(500)
+                  .send("Failed to store file metadata in MongoDB.");
+              }
+            } catch (mongoErr) {
+              console.error("MongoDB insertion error:", mongoErr);
+              return res
+                .status(500)
+                .send("Failed to store file metadata in MongoDB.");
+            }
+          })
+          .end(pdfStream);
+      });
+    });
+
+    ///Student course get
+    app.get("/uploadFile", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = pdfCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
     // Student applies for a course
     app.post("/student/course", async (req, res) => {
       try {
