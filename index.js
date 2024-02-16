@@ -77,6 +77,12 @@ async function run() {
     const teachersFeedbackCollection = client
       .db("edu-trio-dynamix")
       .collection("feedback");
+    const collaborateCollection = client
+      .db("edu-trio-dynamix")
+      .collection("collaborate");
+    const rewardsCollection = client
+      .db("edu-trio-dynamix")
+      .collection("rewards");
 
     // teacher post
     app.post("/teacher", async (req, res) => {
@@ -430,6 +436,64 @@ async function run() {
       try {
         const query = {};
         const cursor = teachersFeedbackCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    // Student collaborate for a project
+    app.post("/student/collaborate", async (req, res) => {
+      try {
+        const projectData = req.body;
+        const result = await collaborateCollection.insertOne(projectData);
+        if (result.insertedCount === 1) {
+          res.status(201).json({ message: "Project added successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to add project" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    ///Student get collaborate
+    app.get("/student/collaborate", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = collaborateCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    // Student rewards
+    app.post("/student/rewards", async (req, res) => {
+      try {
+        const rewardsData = req.body;
+        const result = await rewardsCollection.insertOne(rewardsData);
+        if (result.insertedCount === 1) {
+          res.status(201).json({ message: "rewards added successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to add rewards" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    ///Student get rewards
+    app.get("/student/rewards", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = rewardsCollection.find(query);
         const course = await cursor.toArray();
         res.send(course);
       } catch (error) {
