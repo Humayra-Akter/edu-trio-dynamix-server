@@ -263,20 +263,19 @@ async function run() {
         }
 
         const pdfStream = req.file.buffer;
-
-        // Extract project ID from request body
         const projectId = req.body.projectId;
+        const userEmail = req.body;
 
-        // Uploading PDF file to Cloudinary
         cloudinary.uploader
           .upload_stream({ resource_type: "raw" }, async (error, result) => {
             if (error) {
               return res.status(500).send("Upload to Cloudinary failed");
             }
             const uploadedFileData = {
-              projectId: projectId, // Store project ID
+              projectId: projectId,
               cloudinaryUrl: result.url,
               originalFileName: req.file.originalname,
+              userEmail: userEmail,
             };
 
             try {
@@ -363,13 +362,13 @@ async function run() {
       }
     });
 
-    ///Student project get
+    // Retrieve all student project
     app.get("/student/project", async (req, res) => {
       try {
         const query = {};
         const cursor = studentApplyProjectCollection.find(query);
-        const course = await cursor.toArray();
-        res.send(course);
+        const projects = await cursor.toArray();
+        res.status(200).json(projects);
       } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
@@ -408,22 +407,22 @@ async function run() {
     });
 
     // Get a specific student project by ID
-    app.get("/student/project/:id", async (req, res) => {
-      try {
-        const projectId = req.params.id;
-        // Convert ID to ObjectId
-        const objectId = new ObjectId(projectId);
-        const query = { _id: objectId };
-        const project = await studentApplyProjectCollection.findOne(query);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
-        }
-        res.json(project);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-      }
-    });
+    // app.get("/student/project/:id", async (req, res) => {
+    //   try {
+    //     const projectId = req.params.id;
+    //     // Convert ID to ObjectId
+    //     const objectId = new ObjectId(projectId);
+    //     const query = { _id: objectId };
+    //     const project = await studentApplyProjectCollection.findOne(query);
+    //     if (!project) {
+    //       return res.status(404).json({ message: "Project not found" });
+    //     }
+    //     res.json(project);
+    //   } catch (error) {
+    //     console.error(error);
+    //     res.status(500).json({ message: "Internal server error" });
+    //   }
+    // });
   } finally {
   }
 }
