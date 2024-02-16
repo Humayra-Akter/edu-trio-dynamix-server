@@ -74,6 +74,9 @@ async function run() {
       .db("edu-trio-dynamix")
       .collection("appliedAssignment");
     const pdfCollection = client.db("edu-trio-dynamix").collection("pdf");
+    const teachersFeedbackCollection = client
+      .db("edu-trio-dynamix")
+      .collection("feedback");
 
     // teacher post
     app.post("/teacher", async (req, res) => {
@@ -398,6 +401,35 @@ async function run() {
       try {
         const query = {};
         const cursor = studentApplyAssignmentCollection.find(query);
+        const course = await cursor.toArray();
+        res.send(course);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    // Student submit Feedback for a course
+    app.post("/student/submitFeedback", async (req, res) => {
+      try {
+        const projectData = req.body;
+        const result = await teachersFeedbackCollection.insertOne(projectData);
+        if (result.insertedCount === 1) {
+          res.status(201).json({ message: "Project added successfully" });
+        } else {
+          res.status(500).json({ message: "Failed to add project" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    ///Student get submit Feedback
+    app.get("/student/submitFeedback", async (req, res) => {
+      try {
+        const query = {};
+        const cursor = teachersFeedbackCollection.find(query);
         const course = await cursor.toArray();
         res.send(course);
       } catch (error) {
